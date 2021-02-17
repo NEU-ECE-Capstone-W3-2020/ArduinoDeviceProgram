@@ -29,7 +29,6 @@ void setup()
   tagMessage = "";
   Serial.begin(9600);
   while (!Serial); //Wait for the serial port to come online
-  Serial.println("begin");
 
   Capstone_EMIC::setupEmic(rxPin, txPin, ledPin, &emicSerial); 
   if (Capstone_RFID::setupNano(&nano, &softSerial, 38400) == false) //Configure nano to run at 38400bps
@@ -42,66 +41,29 @@ void setup()
   while (!Serial.available()); //Wait for user to send a character
   Serial.read(); //Throw away the user's character
 
-  Serial.println("Checkpoint");
   nano.startReading(); //Begin scanning for tags
-  
 }
 
 void loop()
 {
-  //Serial.println("Loop");
   if (nano.check() == true) //Check to see if any new data has come in from module
   {
     byte responseType = nano.parseResponse(); //Break response into tag ID, RSSI, frequency, and timestamp
 
     if (responseType == RESPONSE_IS_KEEPALIVE)
     {
-      Serial.println(F("Scanning"));
+      // Do nothing 
     }
     else if (responseType == RESPONSE_IS_TAGFOUND)
     {
-      /*
-      //If we have a full record we can pull out the fun bits
-      int rssi = nano.getTagRSSI(); //Get the RSSI for this tag read
-
-      long freq = nano.getTagFreq(); //Get the frequency this tag was detected at
-
-      long timeStamp = nano.getTagTimestamp(); //Get the time this was read, (ms) since last keep-alive message
-      */
-      byte tagEPCBytes = nano.getTagEPCBytes(); //Get the number of bytes of EPC from response
-
-      /*
-      Serial.print(F(" rssi["));
-      Serial.print(rssi);
-      Serial.print(F("]"));
-
-      Serial.print(F(" freq["));
-      Serial.print(freq);
-      Serial.print(F("]"));
-
-      Serial.print(F(" time["));
-      Serial.print(timeStamp);
-      Serial.print(F("]"));
-      */
-      //Print EPC bytes, this is a subsection of bytes from the response/msg array
-      Serial.print(F(" epc["));
-      for (byte x = 0 ; x < tagEPCBytes ; x++)
-      {
-        if (nano.msg[31 + x] < 0x10) Serial.print(F("0")); //Pretty print
-        Serial.print(nano.msg[31 + x], HEX);
-        Serial.print(F(" "));
-      }
-      Serial.print(F("]"));
-
-      Serial.println();
-      String temp = Capstone_RFID::tagToString(nano.msg, tagEPCBytes); 
-      if (!temp.equals(tagMessage)) {
+      String msg = Capstone_RFID::tagToString(nano.msg, nano.getTagEPCBytes()); 
+      if (!msg.equals(tagMessage)) {
         digitalWrite(ledPin, HIGH);
-        Capstone_EMIC::sendToEmic(&emicSerial, temp);
+        Capstone_EMIC::sendToEmic(&emicSerial, msg);
         digitalWrite(ledPin, LOW);
-        tagMessage = temp; 
+        tagMessage = msg; 
       }
-      Serial.println(Capstone_RFID::tagToString(nano.msg, tagEPCBytes));
+      Serial.println(msg);
     }
     else if (responseType == ERROR_CORRUPT_RESPONSE)
     {
@@ -110,7 +72,7 @@ void loop()
     else
     {
       //Unknown response
-      Serial.print("Unknown error");
+      Serial.println("Unknown error");
     }
   }
 }
