@@ -18,6 +18,8 @@
 const int rxPin = 10;  // Serial input (connects to Emic 2's SOUT pin)
 const int txPin = 11;  // Serial output (connects to Emic 2's SIN pin)
 const int ledPin = 13; // Most Arduino boards have an on-board LED on this pin
+const int debugLedPin = 10; //For range testing, debugging w/o serial
+const int readPowerRFID = 1000; // 10db. DO NOT EXCEED 20db
 
 SoftwareSerial softSerial(2, 3); //RX, TX
 SoftwareSerial emicSerial(10, 11);
@@ -26,12 +28,13 @@ String tagMessage;
 
 void setup()
 {
+  pinMode(debugLedPin, OUTPUT);
   tagMessage = "";
   Serial.begin(9600);
   while (!Serial); //Wait for the serial port to come online
 
   Capstone_EMIC::setupEmic(rxPin, txPin, ledPin, &emicSerial); 
-  if (Capstone_RFID::setupNano(&nano, &softSerial, 38400) == false) //Configure nano to run at 38400bps
+  if (Capstone_RFID::setupNano(&nano, &softSerial, 38400, readPowerRFID) == false) //Configure nano to run at 38400bps
   {
     Serial.println(F("Module failed to respond. Please check wiring."));
     while (1); //Freeze!
@@ -53,9 +56,11 @@ void loop()
     if (responseType == RESPONSE_IS_KEEPALIVE)
     {
       // Do nothing 
+      digitalWrite(debugLedPin, LOW);
     }
     else if (responseType == RESPONSE_IS_TAGFOUND)
     {
+      digitalWrite(debugLedPin, HIGH);
       String msg = Capstone_RFID::tagToString(nano.msg, nano.getTagEPCBytes()); 
       if (!msg.equals(tagMessage)) {
         digitalWrite(ledPin, HIGH);
@@ -67,11 +72,13 @@ void loop()
     }
     else if (responseType == ERROR_CORRUPT_RESPONSE)
     {
+      digitalWrite(debugLedPin, LOW);
       Serial.println("Bad CRC");
     }
     else
     {
       //Unknown response
+      digitalWrite(debugLedPin, LOW);
       Serial.println("Unknown error");
     }
   }

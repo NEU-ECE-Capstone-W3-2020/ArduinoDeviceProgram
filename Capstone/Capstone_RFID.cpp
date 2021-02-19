@@ -5,7 +5,7 @@
 namespace Capstone_RFID {
   //Gracefully handles a reader that is already configured and already reading continuously
   //Because Stream does not have a .begin() we have to do this outside the library
-  boolean setupNano(RFID *nano, SoftwareSerial *softSerial, long baudRate)
+  boolean setupNano(RFID *nano, SoftwareSerial *softSerial, long baudRate, int readPower)
   {
     nano->begin(*softSerial); //Tell the library to communicate over software serial port
   
@@ -51,7 +51,7 @@ namespace Capstone_RFID {
   
     nano->setRegion(REGION_NORTHAMERICA); //Set to North America
   
-    nano->setReadPower(500); //5.00 dBm. Higher values may caues USB port to brown out
+    nano->setReadPower(readPower); //5.00 dBm. Higher values may caues USB port to brown out
     //Max Read TX Power is 27.00 dBm and may cause temperature-limit throttling
   
     return true; //We are ready to rock
