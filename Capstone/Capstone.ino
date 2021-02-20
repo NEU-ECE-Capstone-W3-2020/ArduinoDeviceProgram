@@ -33,8 +33,8 @@ void setup()
   Serial.begin(9600);
   while (!Serial); //Wait for the serial port to come online
 
-  Capstone_EMIC::setupEmic(rxPin, txPin, ledPin, &emicSerial); 
-  if (Capstone_RFID::setupNano(&nano, &softSerial, 38400, readPowerRFID) == false) //Configure nano to run at 38400bps
+  Capstone_EMIC::setupEmic(rxPin, txPin, ledPin, emicSerial); 
+  if (Capstone_RFID::setupNano(nano, softSerial, 38400, readPowerRFID) == false) //Configure nano to run at 38400bps
   {
     Serial.println(F("Module failed to respond. Please check wiring."));
     while (1); //Freeze!
@@ -64,7 +64,7 @@ void loop()
       String msg = Capstone_RFID::tagToString(nano.msg, nano.getTagEPCBytes()); 
       if (!msg.equals(tagMessage)) {
         digitalWrite(ledPin, HIGH);
-        Capstone_EMIC::sendToEmic(&emicSerial, msg);
+        Capstone_EMIC::sendToEmic(emicSerial, msg);
         digitalWrite(ledPin, LOW);
         tagMessage = msg; 
       }

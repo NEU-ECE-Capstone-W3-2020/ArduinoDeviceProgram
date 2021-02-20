@@ -3,8 +3,8 @@
 #include <SoftwareSerial.h> 
 
 namespace Capstone_EMIC {
-  void setupEmic(int rxPin, int txPin, int ledPin, SoftwareSerial *emicSerial);
-  void sendToEmic(SoftwareSerial *emicSerial, String m);
+  void setupEmic(int rxPin, int txPin, int ledPin, SoftwareSerial& emicSerial);
+  void sendToEmic(SoftwareSerial& emicSerial, String m);
 }
 
 #endif
