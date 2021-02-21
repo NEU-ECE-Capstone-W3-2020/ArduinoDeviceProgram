@@ -15,6 +15,8 @@
 #include "Capstone_EMIC.h"
 #include "Capstone_RFID.h"
 
+#define BUFFER_SIZE    256
+
 const int rxPin = 10;  // Serial input (connects to Emic 2's SOUT pin)
 const int txPin = 11;  // Serial output (connects to Emic 2's SIN pin)
 const int ledPin = 13; // Most Arduino boards have an on-board LED on this pin
@@ -22,16 +24,24 @@ const int debugLedPin = 10; //For range testing, debugging w/o serial
 const int readPowerRFID = 1000; // 10db. DO NOT EXCEED 20db
 
 SoftwareSerial softSerial(2, 3); //RX, TX
-SoftwareSerial emicSerial(10, 11);
+SoftwareSerial emicSerial(rxPin, txPin);
+SoftwareSerial piSerial(8, 9);
 RFID nano;
 String tagMessage; 
+char buffer[BUFFER_SIZE];
+int buf_idx;
 
 void setup()
 {
+  buf_idx = 0;
   pinMode(debugLedPin, OUTPUT);
   tagMessage = "";
   Serial.begin(9600);
   while (!Serial); //Wait for the serial port to come online
+
+  pinMode(8, INPUT);
+  pinMode(9, OUTPUT);
+  piSerial.begin(9600);
 
   Capstone_EMIC::setupEmic(rxPin, txPin, ledPin, emicSerial); 
   if (Capstone_RFID::setupNano(nano, softSerial, 38400, readPowerRFID) == false) //Configure nano to run at 38400bps
@@ -49,7 +59,7 @@ void setup()
 
 void loop()
 {
-  if (nano.check() == true) //Check to see if any new data has come in from module
+  if (nano.check()) //Check to see if any new data has come in from module
   {
     byte responseType = nano.parseResponse(); //Break response into tag ID, RSSI, frequency, and timestamp
 
@@ -82,4 +92,18 @@ void loop()
       Serial.println("Unknown error");
     }
   }
+  while(piSerial.available()) {
+    char c = piSerial.read();
+    if(c != -1) {
+        buffer[buf_idx++] = c;
+    }
+  }
+  if(buf_idx > 0) {
+    int rc = Capstone_Pi::parsePacket(buffer, buf_idx, emicSerial);
+    if(rc > 0) {
+        memmove(buffer, buffer + rc, buf_idx - rc);
+        buf_idx -= rc;
+    }
+  }
+
 }
