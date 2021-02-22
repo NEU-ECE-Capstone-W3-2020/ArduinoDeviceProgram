@@ -1,5 +1,6 @@
-#ifdef CAPSTONE_PI_H
+#ifndef CAPSTONE_PI_H
 #define CAPSTONE_PI_H
+#include <SoftwareSerial.h>
 
 #define MAX_SIZE      256
 #define HDR_SIZE        2

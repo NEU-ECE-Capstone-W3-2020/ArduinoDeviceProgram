@@ -12,6 +12,7 @@
 
 #include <SoftwareSerial.h> //Used for transmitting to the device
 
+#include "Capstone_Pi.h"
 #include "Capstone_EMIC.h"
 #include "Capstone_RFID.h"
 
