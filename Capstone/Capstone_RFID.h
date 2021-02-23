@@ -19,7 +19,7 @@
 #define EPC_OFFSET 31
 
 namespace Capstone_RFID {
-  boolean setupNano(RFID& nano, SoftwareSerial& softSerial, long baudRate, int readPower);
+  boolean setupNano(int rxPin, int txPin, RFID& nano, SoftwareSerial& softSerial, long baudRate, int readPower);
   String tagToString(uint8_t data[], uint8_t size);
 }
 

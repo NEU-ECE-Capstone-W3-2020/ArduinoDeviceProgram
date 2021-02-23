@@ -3,15 +3,13 @@
 #include "Capstone_EMIC.h"
 
 namespace Capstone_EMIC {
-  void setupEmic(int rxPin, int txPin, int ledPin, SoftwareSerial& emicSerial){
+  void setupEmic(int rxPin, int txPin, SoftwareSerial& emicSerial){
     // define pin modes
-    pinMode(ledPin, OUTPUT);
     pinMode(rxPin, INPUT);
     pinMode(txPin, OUTPUT);
     
     // set the data rate for the SoftwareSerial port
     emicSerial.begin(9600);
-    digitalWrite(ledPin, LOW);  // turn LED off
     /*
       When the Emic 2 powers on, it takes about 3 seconds for it to successfully
       initialize. It then sends a ":" character to indicate it's ready to accept

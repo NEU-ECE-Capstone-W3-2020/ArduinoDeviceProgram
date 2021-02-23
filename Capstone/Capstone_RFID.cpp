@@ -5,8 +5,10 @@
 namespace Capstone_RFID {
   //Gracefully handles a reader that is already configured and already reading continuously
   //Because Stream does not have a .begin() we have to do this outside the library
-  boolean setupNano(RFID& nano, SoftwareSerial& softSerial, long baudRate, int readPower)
+  boolean setupNano(int rxPin, int txPin, RFID& nano, SoftwareSerial& softSerial, long baudRate, int readPower)
   {
+    pinMode(rxPin, INPUT);
+    pinMode(txPin, OUTPUT);
     nano.begin(softSerial); //Tell the library to communicate over software serial port
   
     //Test to see if we are already connected to a module

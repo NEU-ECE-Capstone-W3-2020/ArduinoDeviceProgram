@@ -1,3 +1,4 @@
+
 /*
   Reading multiple RFID tags, simultaneously!
   By: Nathan Seidle @ SparkFun Electronics
@@ -16,17 +17,25 @@
 #include "Capstone_EMIC.h"
 #include "Capstone_RFID.h"
 
+#ifndef DEBUG
+#define DEBUG
+#endif
+
 #define BUFFER_SIZE    256
 
-const int rxPin = 10;  // Serial input (connects to Emic 2's SOUT pin)
-const int txPin = 11;  // Serial output (connects to Emic 2's SIN pin)
+const int nanoRxPin = 2; // Serial input for TTS module
+const int nanoTxPin = 3; //Serial output for TTS module
+const int piRxPin = 6; // Serial input from Raspberry Pi
+const int piTxPin = 7; // Serial output from Rasberry Pi
+const int emicRxPin = 10;  // Serial input (connects to Emic 2's SOUT pin)
+const int emicTxPin = 11;  // Serial output (connects to Emic 2's SIN pin)
 const int ledPin = 13; // Most Arduino boards have an on-board LED on this pin
 const int debugLedPin = 10; //For range testing, debugging w/o serial
 const int readPowerRFID = 1000; // 10db. DO NOT EXCEED 20db
 
-SoftwareSerial softSerial(2, 3); //RX, TX
-SoftwareSerial emicSerial(rxPin, txPin);
-SoftwareSerial piSerial(8, 9);
+SoftwareSerial nanoSerial(nanoRxPin, nanoTxPin); //RX, TX
+SoftwareSerial emicSerial(emicRxPin, emicTxPin);
+SoftwareSerial piSerial(piRxPin, piTxPin);
 RFID nano;
 String tagMessage; 
 char buffer[BUFFER_SIZE];
@@ -40,12 +49,16 @@ void setup()
   Serial.begin(9600);
   while (!Serial); //Wait for the serial port to come online
 
-  pinMode(8, INPUT);
-  pinMode(9, OUTPUT);
+  pinMode(piRxPin, INPUT);
+  pinMode(piTxPin, OUTPUT);
   piSerial.begin(9600);
 
-  Capstone_EMIC::setupEmic(rxPin, txPin, ledPin, emicSerial); 
-  if (Capstone_RFID::setupNano(nano, softSerial, 38400, readPowerRFID) == false) //Configure nano to run at 38400bps
+#ifndef DEBUG
+  pinMode(ledPin, OUTPUT);
+  digitalWrite(ledPin, LOW);  // turn LED off
+
+  Capstone_EMIC::setupEmic(emicRxPin, emicTxPin, emicSerial); 
+  if (Capstone_RFID::setupNano(nanoRxPin, nanoTxPin, nano, nanoSerial, 38400, readPowerRFID) == false) //Configure nano to run at 38400bps
   {
     Serial.println(F("Module failed to respond. Please check wiring."));
     while (1); //Freeze!
@@ -56,10 +69,13 @@ void setup()
   Serial.read(); //Throw away the user's character
 
   nano.startReading(); //Begin scanning for tags
+#endif
+  Serial.println(F("Init finished!"));
 }
 
 void loop()
 {
+#ifndef DEBUG
   if (nano.check()) //Check to see if any new data has come in from module
   {
     byte responseType = nano.parseResponse(); //Break response into tag ID, RSSI, frequency, and timestamp
@@ -93,6 +109,7 @@ void loop()
       Serial.println("Unknown error");
     }
   }
+#endif
   while(piSerial.available()) {
     char c = piSerial.read();
     if(c != -1) {

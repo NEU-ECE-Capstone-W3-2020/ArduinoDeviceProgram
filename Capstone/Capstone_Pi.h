@@ -2,6 +2,10 @@
 #define CAPSTONE_PI_H
 #include <SoftwareSerial.h>
 
+#ifndef DEBUG
+#define DEBUG
+#endif
+
 #define MAX_SIZE      256
 #define HDR_SIZE        2
 #define TYPE_IDX        0
