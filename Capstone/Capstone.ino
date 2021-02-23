@@ -17,10 +17,6 @@
 #include "Capstone_EMIC.h"
 #include "Capstone_RFID.h"
 
-#ifndef DEBUG
-#define DEBUG
-#endif
-
 #define BUFFER_SIZE    256
 
 const int nanoRxPin = 2; // Serial input for TTS module
