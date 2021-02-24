@@ -49,11 +49,11 @@ void setup()
   pinMode(piTxPin, OUTPUT);
   piSerial.begin(9600);
 
-#ifndef DEBUG
   pinMode(ledPin, OUTPUT);
   digitalWrite(ledPin, LOW);  // turn LED off
 
   Capstone_EMIC::setupEmic(emicRxPin, emicTxPin, emicSerial); 
+#ifndef DEBUG
   if (Capstone_RFID::setupNano(nanoRxPin, nanoTxPin, nano, nanoSerial, 38400, readPowerRFID) == false) //Configure nano to run at 38400bps
   {
     Serial.println(F("Module failed to respond. Please check wiring."));
@@ -106,8 +106,8 @@ void loop()
     }
   }
 #endif
-  while(piSerial.available()) {
-    char c = piSerial.read();
+  while(Serial.available()) {
+    char c = Serial.read();
     if(c != -1) {
         buffer[buf_idx++] = c;
     }
@@ -119,5 +119,4 @@ void loop()
         buf_idx -= rc;
     }
   }
-
 }
