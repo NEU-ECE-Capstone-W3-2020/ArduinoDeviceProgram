@@ -29,7 +29,6 @@ const int readPowerRFID = 1000; // 10db. DO NOT EXCEED 20db
 
 SoftwareSerial nanoSerial(nanoRxPin, nanoTxPin); //RX, TX
 SoftwareSerial emicSerial(emicRxPin, emicTxPin);
-SoftwareSerial piSerial(piRxPin, piTxPin);
 RFID nano;
 String tagMessage; 
 char buffer[BUFFER_SIZE];
