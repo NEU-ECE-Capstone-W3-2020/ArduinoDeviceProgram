@@ -18,6 +18,7 @@
 #include "Capstone_RFID.h"
 
 #define BUFFER_SIZE    256
+#define DEBUG
 
 const int nanoRxPin = 2; // Serial input for TTS module
 const int nanoTxPin = 3; //Serial output for TTS module
@@ -58,8 +59,8 @@ void setup()
   Serial.read(); //Throw away the user's character
 
   nano.startReading(); //Begin scanning for tags
-#endif
   Serial.println(F("Init finished!"));
+#endif
 }
 
 void loop()

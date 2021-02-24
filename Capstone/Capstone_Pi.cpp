@@ -16,11 +16,7 @@ namespace Capstone_Pi {
         while(idx < buffer[LEN_IDX]) {
           msg += buffer[idx++];
         }
-        Serial.print(F("TTS: "));
-        Serial.println(msg);
-#ifndef DEBUG
         Capstone_EMIC::sendToEmic(emicSerial, msg);
-#endif
         return buffer[LEN_IDX];
       }
       default:
