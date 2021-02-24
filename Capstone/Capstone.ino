@@ -44,11 +44,15 @@ void setup()
   while (!Serial.available()); //Wait for user to send a character
   Serial.read(); //Throw away the user's character
 
-  nano.startReading(); //Begin scanning for tags
+  nano.startReading(); //Begin scanning for t ags
+
+    // -- SETTING UP SERIAL CONNECTION TO PI
+  Serial.begin(9600);
 }
 
 void loop()
 {
+  // getting strings from the nano
   if (nano.check() == true) //Check to see if any new data has come in from module
   {
     byte responseType = nano.parseResponse(); //Break response into tag ID, RSSI, frequency, and timestamp
@@ -81,5 +85,26 @@ void loop()
       digitalWrite(debugLedPin, LOW);
       Serial.println("Unknown error");
     }
+  }
+
+  // getting strings from the serial connection to pi
+    if (Serial.available() > 0) {
+
+    digitalWrite(ledPin, HIGH);
+    delay(500);
+    digitalWrite(ledPin, LOW);
+    
+    // grabbing data from the pi
+    String data = Serial.readStringUntil('\n');
+
+    emicSerial.print('S');
+    emicSerial.print(data);
+    emicSerial.print('\n');
+    digitalWrite(ledPin, HIGH);         // Turn on LED while Emic is outputting audio
+    while (emicSerial.read() != ':');   // Wait here until the Emic 2 responds with a ":" indicating it's ready to accept the next command
+    digitalWrite(ledPin, LOW);
+      
+    delay(500);    // 1/2 second delay
+    
   }
 }
