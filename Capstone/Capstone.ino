@@ -39,11 +39,11 @@ void setup()
     Serial.println(F("Module failed to respond. Please check wiring."));
     while (1); //Freeze!
   }
-
+/*
   Serial.println(F("Press a key to begin scanning for tags."));
   while (!Serial.available()); //Wait for user to send a character
   Serial.read(); //Throw away the user's character
-
+*/
   nano.startReading(); //Begin scanning for t ags
 
     // -- SETTING UP SERIAL CONNECTION TO PI

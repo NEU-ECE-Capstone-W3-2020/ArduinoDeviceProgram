@@ -12,7 +12,7 @@ namespace Capstone_RFID {
     //Test to see if we are already connected to a module
     //This would be the case if the Arduino has been reprogrammed and the module has stayed powered
     softSerial.begin(baudRate); //For this test, assume module is already at our desired baud rate
-    while (softSerial.isListening()); //Wait for port to open
+    while (softSerial.isListening() == false); //Wait for port to open
   
     //About 200ms from power on the module will send its firmware version at 115200. We need to ignore this.
     while (softSerial.available()) softSerial.read();
