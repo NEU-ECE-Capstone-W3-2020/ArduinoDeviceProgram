@@ -107,6 +107,9 @@ void loop()
     }
   }
   if(buf_idx > 0) {
+    digitalWrite(ledPin, HIGH);
+    delay(1000);
+    digitalWrite(ledPin, LOW);
     int rc = Capstone_Pi::parsePacket(buffer, buf_idx, emicSerial);
     if(rc > 0) {
         memmove(buffer, buffer + rc, buf_idx - rc);
