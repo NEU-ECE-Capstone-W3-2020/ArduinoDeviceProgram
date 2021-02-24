@@ -45,9 +45,6 @@ void setup()
   Serial.read(); //Throw away the user's character
 */
   nano.startReading(); //Begin scanning for t ags
-
-    // -- SETTING UP SERIAL CONNECTION TO PI
-  Serial.begin(9600);
 }
 
 void loop()
