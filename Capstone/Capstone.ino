@@ -21,8 +21,6 @@
 
 const int nanoRxPin = 2; // Serial input for TTS module
 const int nanoTxPin = 3; //Serial output for TTS module
-const int piRxPin = 6; // Serial input from Raspberry Pi
-const int piTxPin = 7; // Serial output from Rasberry Pi
 const int emicRxPin = 10;  // Serial input (connects to Emic 2's SOUT pin)
 const int emicTxPin = 11;  // Serial output (connects to Emic 2's SIN pin)
 const int ledPin = 13; // Most Arduino boards have an on-board LED on this pin
@@ -44,10 +42,6 @@ void setup()
   tagMessage = "";
   Serial.begin(9600);
   while (!Serial); //Wait for the serial port to come online
-
-  pinMode(piRxPin, INPUT);
-  pinMode(piTxPin, OUTPUT);
-  piSerial.begin(9600);
 
   pinMode(ledPin, OUTPUT);
   digitalWrite(ledPin, LOW);  // turn LED off
