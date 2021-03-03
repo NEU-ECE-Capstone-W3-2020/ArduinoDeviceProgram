@@ -14,6 +14,12 @@
 
 #include "Capstone_EMIC.h"
 #include "Capstone_RFID.h"
+#include <LiquidCrystal.h>
+
+// initialize the library by associating any needed LCD interface pin
+// with the arduino pin number it is connected to
+const int rs = 13, en = 12, d4 = 8, d5 = 6, d6 = 5, d7 = 4;
+LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 
 const int rxPin = 10;  // Serial input (connects to Emic 2's SOUT pin)
 const int txPin = 11;  // Serial output (connects to Emic 2's SIN pin)
@@ -25,7 +31,8 @@ SoftwareSerial softSerial(2, 3); //RX, TX
 SoftwareSerial emicSerial(10, 11);
 RFID nano;
 String tagMessage; 
-static bool DEBUG = false;
+static bool DEBUG = true;
+String bleMessage = "";
 
 void setup()
 {
@@ -33,6 +40,8 @@ void setup()
   pinMode(debugLedPin, OUTPUT);
   tagMessage = "";
 
+  // set up the LCD's number of columns and rows:
+  lcd.begin(16, 2);
   
   Capstone_EMIC::setupEmic(rxPin, txPin, ledPin, emicSerial); 
   if (Capstone_RFID::setupNano(nano, softSerial, 38400, readPowerRFID) == false) //Configure nano to run at 38400bps
@@ -40,6 +49,9 @@ void setup()
     debug_print("Module failed to respond. Please check wiring.");
     while (1); //Freeze!
   }
+
+  // ble USB
+  Serial.begin(9600);
 
   nano.startReading(); //Begin scanning for tags
 }
@@ -58,12 +70,37 @@ void loop()
       
       if (!msg.equals(tagMessage)) {
         msgToEmic(msg);
+        msgToLCD(msg);
         tagMessage = msg; 
       }
     } else {
       debug_print("Error code: " + responseType);
       digitalWrite(debugLedPin, LOW);
     }
+  }
+
+  if (Serial.available()) {
+    String cur_msg = Serial.readStringUntil('\n');
+    if (cur_msg != bleMessage) {
+      bleMessage = cur_msg;
+      Serial.println("Received from Pi: " + Serial.readString());
+      msgToEmic(bleMessage);
+      msgToLCD(bleMessage);
+      Serial.flush();
+    }
+  }
+}
+
+void msgToLCD(String msg) {
+  lcd.clear();
+  if (msg.length() > 12) {
+    lcd.setCursor(0,0);
+    lcd.print(msg.substring(0, 14));
+    lcd.setCursor(0, 1);
+    lcd.print(msg.substring(14, msg.length()));
+  } else {
+    lcd.setCursor(0,0);
+    lcd.print(msg); 
   }
 }
 
