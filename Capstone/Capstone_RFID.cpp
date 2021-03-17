@@ -24,7 +24,7 @@ namespace Capstone_RFID {
       //This happens if the baud rate is correct but the module is doing a ccontinuous read
       nano.stopReading();
   
-      Serial.println(F("Module continuously reading. Asking it to stop..."));
+      //Serial.println(F("Module continuously reading. Asking it to stop..."));
   
       delay(1500);
     }
@@ -59,12 +59,12 @@ namespace Capstone_RFID {
 
   String tagToString(uint8_t data[], uint8_t size) {
   if (size == 0) {
-    Serial.println("No bytes");
+    //Serial.println("No bytes");
     return "";
   }
 
   if (data[EPC_OFFSET] != VERSION_TAG) {
-    Serial.println("Wrong version");
+    //Serial.println("Wrong version");
     return "";
   }
   

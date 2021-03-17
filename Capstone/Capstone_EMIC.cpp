@@ -28,6 +28,5 @@ namespace Capstone_EMIC {
     emicSerial.print('S');
     emicSerial.print(m);  // Send the desired string to convert to speech
     emicSerial.print('\n');
-    Serial.println("End EmIC output");
   }
 }
