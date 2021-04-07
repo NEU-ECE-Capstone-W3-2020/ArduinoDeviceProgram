@@ -14,6 +14,7 @@
 
 #include "Capstone_EMIC.h"
 #include "Capstone_RFID.h"
+#include "Capstone_BLE.h"
 
 const int rxPin = 10;  // Serial input (connects to Emic 2's SOUT pin)
 const int txPin = 11;  // Serial output (connects to Emic 2's SIN pin)
@@ -23,6 +24,7 @@ const int readPowerRFID = 1000; // 10db. DO NOT EXCEED 20db
 
 SoftwareSerial softSerial(2, 3); //RX, TX
 SoftwareSerial emicSerial(10, 11);
+SoftwareSerial bleSerial(); // TODO: pins
 RFID nano;
 String tagMessage; 
 static bool DEBUG = false;
@@ -34,8 +36,9 @@ void setup()
   tagMessage = "";
 
   
+  bleSerial.begin(); // TODO: baudrate
   Capstone_EMIC::setupEmic(rxPin, txPin, ledPin, emicSerial); 
-  if (Capstone_RFID::setupNano(nano, softSerial, 38400, readPowerRFID) == false) //Configure nano to run at 38400bps
+  if (!Capstone_RFID::setupNano(nano, softSerial, 38400, readPowerRFID)) //Configure nano to run at 38400bps
   {
     debug_print("Module failed to respond. Please check wiring.");
     while (1); //Freeze!
@@ -46,7 +49,7 @@ void setup()
 
 void loop()
 {
-  if (nano.check() == true) //Check to see if any new data has come in from module
+  if (nano.check()) //Check to see if any new data has come in from module
   {
     byte responseType = nano.parseResponse(); //Break response into tag ID, RSSI, frequency, and timestamp
 
@@ -64,6 +67,10 @@ void loop()
       debug_print("Error code: " + responseType);
       digitalWrite(debugLedPin, LOW);
     }
+  }
+  String ble_string = Capstone_BLE::receiveFromBle(bleSerial);
+  if(ble_string != "") {
+    msgToEmic(ble_string);
   }
 }
 
