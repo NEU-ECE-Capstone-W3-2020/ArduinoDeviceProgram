@@ -24,9 +24,14 @@ const int readPowerRFID = 1000; // 10db. DO NOT EXCEED 20db
 
 SoftwareSerial softSerial(2, 3); //RX, TX
 SoftwareSerial emicSerial(10, 11);
-SoftwareSerial bleSerial(); // TODO: pins
+SoftwareSerial bleSerial(9, 10);
+
 RFID nano;
 String tagMessage; 
+
+BLEUart bleuart;
+String bleMessage;
+
 static bool DEBUG = false;
 
 void setup()
@@ -35,14 +40,14 @@ void setup()
   pinMode(debugLedPin, OUTPUT);
   tagMessage = "";
 
-  
-  bleSerial.begin(); // TODO: baudrate
   Capstone_EMIC::setupEmic(rxPin, txPin, ledPin, emicSerial); 
   if (!Capstone_RFID::setupNano(nano, softSerial, 38400, readPowerRFID)) //Configure nano to run at 38400bps
   {
     debug_print("Module failed to respond. Please check wiring.");
     while (1); //Freeze!
   }
+
+  Capstone_BLE::setupBLE(bleSerial, bleuart);
 
   nano.startReading(); //Begin scanning for tags
 }
@@ -68,9 +73,16 @@ void loop()
       digitalWrite(debugLedPin, LOW);
     }
   }
-  String ble_string = Capstone_BLE::receiveFromBle(bleSerial);
-  if(ble_string != "") {
-    msgToEmic(ble_string);
+
+  if ( bleuart.notifyEnabled() )
+  {
+    String cur_str = Capstone_BLE::getLastString();
+    if (cur_str != bleMessage) {
+      Serial.println("GOT BLE MESSAGE: " + bleMessage);
+      bleMessage = cur_str;
+      bleuart.print(cur_str);
+      msgToEmic(bleMessage);
+    }
   }
 }
 

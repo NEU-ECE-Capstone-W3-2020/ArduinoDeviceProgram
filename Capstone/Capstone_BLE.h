@@ -2,6 +2,7 @@
 #define CAPSTONE_BLE
 
 #include <SoftwareSerial.h> 
+#include <bluefruit.h>
 
 namespace Capstone_BLE {
     // See https://docs.google.com/spreadsheets/d/1hY7SFB_dBNCCz2EGmpBoGptssS9gRMkLEKAGmXN6TGU/edit#gid=0
@@ -16,7 +17,13 @@ namespace Capstone_BLE {
         IsecWelcome      = 7
     };
 
-    String receiveFromBle(SoftwareSerial& bleSerial);
+    void setupBLE(SoftwareSerial& bleSerial, BLEUart& bleuart);
+    String getLastString();
+    void startAdv(void);
+    void prph_connect_callback(uint16_t conn_handle);
+    void prph_disconnect_callback(uint16_t conn_handle, uint8_t reason);
+    void prph_bleuart_rx_callback(uint16_t conn_handle);
+    void scan_callback(ble_gap_evt_adv_report_t* report);
 }
 
 #endif

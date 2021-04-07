@@ -1,60 +1,141 @@
 #include "Capstone_BLE.h"
-
-#define BUFFER_SIZE 32
+// OTA DFU service
+BLEDfu bledfu;
 
 namespace Capstone_BLE {
-    // anonymous namespace
-    namespace {
-        String decodeValue(Encoded_Strings val) {
-            switch(val) {
-            case DrMasseyOffice:
-                return "Dr. Massey's Office";
-            case Room203:
-                return "Room 203";
-            case ElevatorFloor2:
-                return "Elevator Floor 2";
-            case CafeStregaClosed:
-                return "Cafe Strega, currently closed. Hours 10am to 6pm";
-            case CafeStregaOpen:
-                return "Welcome to Cafe Strega, open until 6pm. Come grab a pastry!";
-            case Calc2:
-                return "Calculus 2 - Lupi, ending at 9am ";
-            case IsecExit:
-                return "Exit to isec quad";
-            case IsecWelcome:
-                return "Welcome to ISEC";
-            default:
-                return "Unkown BLE Value";
-            }
-        }
+
+  BLEUart bleuart; 
+  
+  void setupBLE(SoftwareSerial& bleSerial, BLEUart& bleuart)
+  {
+    bleuart = bleuart;
+    bleSerial.begin(9600);
+    
+    // Initialize Bluefruit with max concurrent connections as Peripheral = 1, Central = 1
+    // SRAM usage required by SoftDevice will increase with number of connections
+    Bluefruit.begin(1, 1);
+    Bluefruit.setTxPower(4);    // Check bluefruit.h for supported values
+    Bluefruit.setName("CANE");
+  
+    // Callbacks for Peripheral
+    Bluefruit.Periph.setConnectCallback(prph_connect_callback);
+    Bluefruit.Periph.setDisconnectCallback(prph_disconnect_callback);
+  
+    // To be consistent OTA DFU should be added first if it exists
+    bledfu.begin();
+  
+    // Configure and Start BLE Uart Service
+    bleuart.begin();
+    bleuart.setRxCallback(prph_bleuart_rx_callback);
+  
+  
+    /* Start Central Scanning
+     * - Enable auto scan if disconnected
+     * - Interval = 100 ms, window = 80 ms
+     * - Filter only accept bleuart service
+     * - Don't use active scan
+     * - Start(timeout) with timeout = 0 will scan forever (until connected)
+     */
+    Bluefruit.Scanner.setRxCallback(scan_callback);
+    Bluefruit.Scanner.restartOnDisconnect(true);
+    Bluefruit.Scanner.setInterval(160, 80); // in unit of 0.625 ms
+    Bluefruit.Scanner.filterUuid(bleuart.uuid);
+    Bluefruit.Scanner.useActiveScan(false);
+    Bluefruit.Scanner.start(0);                   // 0 = Don't stop scanning after n seconds
+  
+    // Set up and start advertising
+    startAdv();
+  }
+  
+  void startAdv(void)
+  {
+    // Advertising packet
+    Bluefruit.Advertising.addFlags(BLE_GAP_ADV_FLAGS_LE_ONLY_GENERAL_DISC_MODE);
+    Bluefruit.Advertising.addTxPower();
+  
+    // Include bleuart 128-bit uuid
+    Bluefruit.Advertising.addService(bleuart);
+  
+    // Secondary Scan Response packet (optional)
+    // Since there is no room for 'Name' in Advertising packet
+    Bluefruit.ScanResponse.addName();
+  
+    /* Start Advertising
+     * - Enable auto advertising if disconnected
+     * - Interval:  fast mode = 20 ms, slow mode = 152.5 ms
+     * - Timeout for fast mode is 30 seconds
+     * - Start(timeout) with timeout = 0 will advertise forever (until connected)
+     *
+     * For recommended advertising interval
+     * https://developer.apple.com/library/content/qa/qa1931/_index.html
+     */
+    Bluefruit.Advertising.restartOnDisconnect(true);
+    Bluefruit.Advertising.setInterval(32, 244);    // in unit of 0.625 ms
+    Bluefruit.Advertising.setFastTimeout(30);      // number of seconds in fast mode
+    Bluefruit.Advertising.start(0);                // 0 = Don't stop advertising after n seconds
+  }
+  
+  String adv_str = "";
+  bool new_str = false;
+  
+  String getLastString() {
+    return adv_str;
+  }
+  
+  /*------------------------------------------------------------------*/
+  /* Peripheral
+   *------------------------------------------------------------------*/
+  void prph_connect_callback(uint16_t conn_handle)
+  {
+    // Get the reference to current connection
+    BLEConnection* connection = Bluefruit.Connection(conn_handle);
+  
+    char peer_name[32] = { 0 };
+    connection->getPeerName(peer_name, sizeof(peer_name));
+  
+    Serial.print("[Prph] Connected to ");
+    Serial.println(peer_name);
+    bleuart.print(adv_str);
+    
+  }
+  
+  void prph_disconnect_callback(uint16_t conn_handle, uint8_t reason)
+  {
+    (void) conn_handle;
+    (void) reason;
+  
+    Serial.println();
+    Serial.println("[Prph] Disconnected");
+  }
+  
+  void prph_bleuart_rx_callback(uint16_t conn_handle)
+  {
+    (void) conn_handle;
+    
+    // Forward data from Mobile to our peripheral
+    char str[20+1] = { 0 };
+    bleuart.read(str, 20);
+  
+    Serial.print("[Prph] RX: ");
+    Serial.println(str);  
+  
+    String strr = str;
+  
+    if (strr != adv_str) {
+      adv_str = strr;
+      new_str = true;
+      Serial.println("updating!");
     }
-
-    String receiveFromBle(SoftwareSerial& bleSerial){
-        if(bleSerial.available()){
-            uint8_t len = bleSerial.peek();
-            if(len >= bleSerial.available()) {
-                uint8_t idx = 0;
-                uint8_t buffer[BUFFER_SIZE];
-                if(len > BUFFER_SIZE) {
-                    while(bleSerial.available()) {
-                        bleSerial.read(); // clear buffer
-                    }
-                    return "Bad Length";
-                }
-
-                bleSerial.read(); // drop len we already read
-                while(idx < len) {
-                    buffer[idx] = bleSerial.read();
-                    idx++;
-                }
-
-                String msg;
-                for(int i = 0; i < idx; ++i) {
-                    msg += decodeValue((Encoded_Strings) buffer[idx]);
-                }
-                return msg;
-            }
-        }
-        return "";
-    }
+  }
+  
+  /*------------------------------------------------------------------*/
+  /* Central
+   *------------------------------------------------------------------*/
+  void scan_callback(ble_gap_evt_adv_report_t* report)
+  {
+    // Since we configure the scanner with filterUuid()
+    // Scan callback only invoked for device with bleuart service advertised  
+    // Connect to the device with bleuart service in advertising packet  
+    Bluefruit.Central.connect(report);
+  }
 }
