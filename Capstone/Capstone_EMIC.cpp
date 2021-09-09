@@ -2,7 +2,7 @@
 
 #include "Capstone_EMIC.h"
 
-namespace EMIC {
+namespace Capstone_EMIC {
   void setupEmic(int rxPin, int txPin, int ledPin, SoftwareSerial& emicSerial){
     // define pin modes
     pinMode(ledPin, OUTPUT);

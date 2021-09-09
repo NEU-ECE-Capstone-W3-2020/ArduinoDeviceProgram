@@ -1,5 +1,6 @@
 #ifndef EMIC_H
 #define EMIC_H
+
 #include <SoftwareSerial.h> 
 
 namespace Capstone_EMIC {
